@@ -4,15 +4,12 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# IntelliJ IDEA
+target/
 .idea/
 *.iml
-
-# Maven
-target/
-
-# Logs
+.env
 *.log
+
 
 # OS files
 .DS_Store
