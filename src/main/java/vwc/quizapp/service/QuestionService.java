@@ -1,9 +1,12 @@
 package vwc.quizapp.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import vwc.quizapp.entity.Question;
 import vwc.quizapp.repository.QuestionDao;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -15,32 +18,52 @@ public class QuestionService {
         this.questionDao = questionDao;
     }
 
-    public List<Question> getAllQuestions() {
-        return questionDao.findAll();
+    public ResponseEntity<List<Question>> getAllQuestions() {
+        try {
+            return new ResponseEntity<>(questionDao.findAll(), HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(new ArrayList<>(),HttpStatus.BAD_REQUEST);
+
     }
 
-    public List<Question> getAllQuestionsByCategory(String category) {
-        return questionDao.findByCategory(category);
+    public ResponseEntity<List<Question>> getAllQuestionsByCategory(String category) {
+        try {
+            return new ResponseEntity<>(questionDao.findByCategory(category),HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(new ArrayList<>(),HttpStatus.BAD_REQUEST);
     }
 
-    public String addQuestion(Question question) {
-        questionDao.save(question);
-        return "Question Added Successfully";
+    public ResponseEntity<String> addQuestion(Question question) {
+
+        try {
+            if (questionDao.existsByQuestionTitle(question.getQuestionTitle())) {
+                return new ResponseEntity<>("This Question Already Exists", HttpStatus.CONFLICT);
+            }
+
+            questionDao.save(question);
+            return new ResponseEntity<>("Question Added Successfully", HttpStatus.CREATED);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public String deleteById(Integer id) {
+    public ResponseEntity<String> deleteById(Integer id) {
 
-        // Check whether the question exists or not
         if (!questionDao.existsById(id)) {
-            return "Question with ID " + id + " not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Question with ID " + id + " not found");
         }
 
         try {
             questionDao.deleteById(id);
-            return "Question Deleted Successfully";
+            return ResponseEntity.ok("Question Deleted Successfully");
+
         } catch (Exception e) {
-            e.printStackTrace(); // Prints the actual error in console
-            return "Error while deleting: " + e.getMessage();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while deleting: " + e.getMessage());
         }
     }
 }
